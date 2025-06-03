@@ -4,8 +4,8 @@ robust_set_covering.py
 This script solves the Set Covering Problem (SCP) for a small network example
 with both deterministic and robust versions using PuLP.
 
-Author: [Your Name]
-Date: [Today’s Date]
+Author: [Pranav Gairola]
+Date: [03-06-2025]
 """
 
 import pulp
