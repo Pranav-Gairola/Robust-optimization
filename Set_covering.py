@@ -1,6 +1,4 @@
 """
-robust_set_covering.py
-
 This script solves the Set Covering Problem (SCP) for a small network example
 with both deterministic and robust versions using PuLP.
 
