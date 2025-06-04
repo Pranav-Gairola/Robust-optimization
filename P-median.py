@@ -19,7 +19,7 @@ Key Features:
 - Demonstrates classical and robust optimization paradigms.
 - Ideal for teaching, research, and prototyping in facility location problems.
 
-Author: [Pranav Gairola]
+Author: Pranav Gairola
 """
 
 import pulp
