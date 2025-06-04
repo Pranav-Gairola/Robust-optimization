@@ -33,7 +33,7 @@ Robust optimization is used to hedge against uncertainty in the coverage matrix 
 A box uncertainty model assumes each entry in a_ij can be reduced by a δ factor (e.g., 0.5),
 leading to conservative constraints that ensure coverage even under worst-case deviations.
 
-Author: [Pranav Gairola]
+Author: Pranav Gairola
 
 """
 
