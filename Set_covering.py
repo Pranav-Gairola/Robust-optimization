@@ -1,6 +1,4 @@
 """
-robust_set_covering.py
-
 This script solves the Set Covering Problem (SCP) for a small example network using both
 deterministic and robust optimization formulations with PuLP.
 
@@ -36,7 +34,7 @@ A box uncertainty model assumes each entry in a_ij can be reduced by a δ factor
 leading to conservative constraints that ensure coverage even under worst-case deviations.
 
 Author: [Pranav Gairola]
-Date: [June 2025]
+
 """
 
 import pulp
