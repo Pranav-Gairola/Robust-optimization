@@ -68,7 +68,7 @@ def solve_robust_knapsack(profits, nominal_weights, deviations, capacity, Gamma)
     return status, objective_value, decision_vars, gamma_value, chi_values
 
 
-def RKP():
+def main():
     # Example problem data
     profits = [10, 7, 5, 8, 11]
     nominal_weights = [2, 3, 1, 4, 5]
@@ -90,6 +90,6 @@ def RKP():
     for var, value in chi_values.items():
         print(f"{var} = {value}")
 
-# if __name__ == "__main__":
-#     main()
-RKP()
+if __name__ == "__main__":
+    main()
+
