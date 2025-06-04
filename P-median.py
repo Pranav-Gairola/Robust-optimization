@@ -1,55 +1,40 @@
 """
-Title: Deterministic and Robust p-Median Problem Solver using PuLP
+p_median_facility_location.py
 
-Author: Pranav Gairola
-Date: June 2025
+This script solves the classical p-median facility location problem using both
+a deterministic formulation and a robust optimization formulation.
 
-Description:
-This script implements a deterministic and robust formulation of the p-median facility location problem using the PuLP optimization library in Python.
+Problem Description:
+--------------------
+Given a set of demand nodes, the goal of the p-median problem is to open `p` facilities
+such that the total distance from demand nodes to their assigned open facilities is minimized.
 
-Problem:
-Given a set of demand nodes and pairwise distances, the goal is to locate exactly 'p' facilities such that the total assignment distance is minimized. Each demand node must be assigned to one of the open facilities.
+In the **deterministic model**, it is assumed that all distances are known with certainty.
 
-Structure:
-- Part 1: Solves the deterministic p-median problem.
-- Part 2: Solves the robust p-median version using affine dual constraints.
+In the **robust model**, certain arcs (i.e., distances between node pairs) are considered uncertain.
+The model incorporates a robust optimization approach using a budgeted uncertainty set to safeguard
+against worst-case deviations in these uncertain distances.
 
-Dependencies:
-- PuLP
-- NumPy
+Key Features:
+-------------
+- Uses `pulp` for solving MILP problems.
+- Demonstrates classical and robust optimization paradigms.
+- Ideal for teaching, research, and prototyping in facility location problems.
 
-How to Use:
-- Modify the 'nodes', 'distance' matrix, or number of facilities `p` as needed.
-- Run the script to view open facilities, assignments, and objective values.
-
-Illustration:
-Example network used in this code:
-    
-        A ——4—— B ——5—— C
-        |     /       | \ 
-        6   7        3  11
-        | /          |   \
-        E ——5—— D ——7—— F
-         \             /
-          ————4——————
-
-    Distances between nodes are symmetric and taken as per the matrix.
-    Robust Extension:
-    A robust version considers uncertainty in selected arc distances:
-    - Uncertain arcs: ('A', 'F'), ('B', 'F'), and ('C', 'E') with deviation ±2 units.
-    - A polyhedral uncertainty set is modeled via dualization for worst-case deviation handling.
-
-    Uncertainty applies on arcs: ('A','F'), ('B','F'), and ('C','E') (highlighted with ±2 in the robust version).
-
+Author: [Pranav Gairola]
+Date: [June 2025]
 """
 
 import pulp
+import numpy as np
 
-# Data
+# ----------------------------
+# Input Data
+# ----------------------------
 nodes = ['A', 'B', 'C', 'D', 'E', 'F']
-p = 2  # number of facilities
+p = 2  # number of facilities to open
 
-# Distances
+# Distance matrix: symmetric and complete
 distance = {
     ('A', 'A'): 0, ('A', 'B'): 4, ('A', 'C'): 8, ('A', 'D'): 12, ('A', 'E'): 6, ('A', 'F'): 9,
     ('B', 'A'): 4, ('B', 'B'): 0, ('B', 'C'): 5, ('B', 'D'): 10, ('B', 'E'): 7, ('B', 'F'): 8,
@@ -59,97 +44,89 @@ distance = {
     ('F', 'A'): 9, ('F', 'B'): 8, ('F', 'C'):11, ('F', 'D'): 7,  ('F', 'E'): 4, ('F', 'F'): 0,
 }
 
-model = pulp.LpProblem("Deterministic_p-Median", pulp.LpMinimize)
-
-# Decision variables
-x = pulp.LpVariable.dicts("Open", nodes, cat="Binary")  # facility open
-y = pulp.LpVariable.dicts("Assign", [(i, j) for i in nodes for j in nodes], cat="Binary")
-
-# Objective: Minimize total distance
-model += pulp.lpSum(distance[i, j] * y[i, j] for i in nodes for j in nodes)
-
-# Each demand is assigned to one facility
-for i in nodes:
-    model += pulp.lpSum(y[i, j] for j in nodes) == 1
-
-# Assign only to open facilities
-for i in nodes:
-    for j in nodes:
-        model += y[i, j] <= x[j]
-
-# Open exactly p facilities
-model += pulp.lpSum(x[j] for j in nodes) == p
-
-# Solve
-model.solve()
-
-# Output
-print("Status:", pulp.LpStatus[model.status])
-print("Objective Value:", pulp.value(model.objective))
-print("Open Facilities:", [j for j in nodes if pulp.value(x[j]) > 0.5])
-print("Assignments:")
-for i in nodes:
-    for j in nodes:
-        if pulp.value(y[i, j]) > 0.5:
-            print(f"  Demand at {i} assigned to facility at {j}")
-
-# Now add uncertainty on arcs: ('A', 'F'), ('B', 'F'), ('C', 'E') with deviation up to ±2.
-# We use dualization for the worst-case distance deviations.
-
-import numpy as np
-
-# Uncertain arcs and dimension of uncertainty
+# Uncertain arcs (those with possible distance perturbations)
 uncertain_arcs = [('A', 'F'), ('B', 'F'), ('C', 'E')]
-num_uncertain = len(uncertain_arcs)
 
-# Polyhedral set: |ξ_k| <= 2 -> Dξ + q >= 0
-D = np.vstack([np.eye(num_uncertain), -np.eye(num_uncertain)])
-q = np.array([2.0] * (2 * num_uncertain))
 
-# Sensitivity matrix P[(i,j)][k]
-P = {}
-for i in nodes:
-    for j in nodes:
-        P[(i, j)] = np.zeros(num_uncertain)
-        for k, (iu, ju) in enumerate(uncertain_arcs):
-            if (i, j) == (iu, ju):
-                P[(i, j)][k] = 1.0  # distance changes by ξ_k
+def solve_deterministic_p_median(nodes, p, distance):
+    """Solves the deterministic p-median problem."""
+    print("\n--- Solving Deterministic p-Median ---")
+    model = pulp.LpProblem("Deterministic_p-Median", pulp.LpMinimize)
+    x = pulp.LpVariable.dicts("Open", nodes, cat="Binary")
+    y = pulp.LpVariable.dicts("Assign", [(i, j) for i in nodes for j in nodes], cat="Binary")
 
-# Build robust model
-model = pulp.LpProblem("Robust_p-Median", pulp.LpMinimize)
+    model += pulp.lpSum(distance[i, j] * y[i, j] for i in nodes for j in nodes)
 
-x = pulp.LpVariable.dicts("Open", nodes, cat="Binary")
-y = pulp.LpVariable.dicts("Assign", [(i, j) for i in nodes for j in nodes], cat="Binary")
-w = pulp.LpVariable.dicts("w", range(2 * num_uncertain), lowBound=0)
+    for i in nodes:
+        model += pulp.lpSum(y[i, j] for j in nodes) == 1
+    for i in nodes:
+        for j in nodes:
+            model += y[i, j] <= x[j]
+    model += pulp.lpSum(x[j] for j in nodes) == p
 
-# Objective = Nominal + max deviation (dualized)
-nominal = pulp.lpSum(distance[i, j] * y[i, j] for i in nodes for j in nodes)
-robust = pulp.lpSum(q[k] * w[k] for k in range(2 * num_uncertain))
-model += nominal + robust
+    model.solve()
 
-# Same constraints as before
-for i in nodes:
-    model += pulp.lpSum(y[i, j] for j in nodes) == 1
-for i in nodes:
-    for j in nodes:
-        model += y[i, j] <= x[j]
-model += pulp.lpSum(x[j] for j in nodes) == p
+    print("Status:", pulp.LpStatus[model.status])
+    print("Objective Value:", pulp.value(model.objective))
+    print("Open Facilities:", [j for j in nodes if pulp.value(x[j]) > 0.5])
+    print("Assignments:")
+    for i in nodes:
+        for j in nodes:
+            if pulp.value(y[i, j]) > 0.5:
+                print(f"  Demand at {i} assigned to facility at {j}")
 
-# Robust dual constraints: Dᵀw = -Pᵀ y
-for l in range(num_uncertain):
-    lhs = pulp.lpSum(D[k, l] * w[k] for k in range(2 * num_uncertain))
-    rhs = -pulp.lpSum(P[(i, j)][l] * y[i, j] for i in nodes for j in nodes)
-    model += lhs == rhs
 
-# Solve
-model.solve()
+def solve_robust_p_median(nodes, p, distance, uncertain_arcs):
+    """Solves the robust p-median problem with budgeted uncertainty."""
+    print("\n--- Solving Robust p-Median ---")
+    num_uncertain = len(uncertain_arcs)
+    D = np.vstack([np.eye(num_uncertain), -np.eye(num_uncertain)])
+    q = np.array([2.0] * (2 * num_uncertain))  # Budget weights
 
-# Output
-print("Status:", pulp.LpStatus[model.status])
-print("Objective Value:", pulp.value(model.objective))
-print("Open Facilities:", [j for j in nodes if pulp.value(x[j]) > 0.5])
-print("Assignments:")
-for i in nodes:
-    for j in nodes:
-        if pulp.value(y[i, j]) > 0.5:
-            print(f"  Demand at {i} assigned to facility at {j}")
+    P = {}
+    for i in nodes:
+        for j in nodes:
+            P[(i, j)] = np.zeros(num_uncertain)
+            for k, (iu, ju) in enumerate(uncertain_arcs):
+                if (i, j) == (iu, ju):
+                    P[(i, j)][k] = 1.0
+
+    model = pulp.LpProblem("Robust_p-Median", pulp.LpMinimize)
+    x = pulp.LpVariable.dicts("Open", nodes, cat="Binary")
+    y = pulp.LpVariable.dicts("Assign", [(i, j) for i in nodes for j in nodes], cat="Binary")
+    w = pulp.LpVariable.dicts("w", range(2 * num_uncertain), lowBound=0)
+
+    nominal = pulp.lpSum(distance[i, j] * y[i, j] for i in nodes for j in nodes)
+    robust = pulp.lpSum(q[k] * w[k] for k in range(2 * num_uncertain))
+    model += nominal + robust
+
+    for i in nodes:
+        model += pulp.lpSum(y[i, j] for j in nodes) == 1
+    for i in nodes:
+        for j in nodes:
+            model += y[i, j] <= x[j]
+    model += pulp.lpSum(x[j] for j in nodes) == p
+
+    for l in range(num_uncertain):
+        lhs = pulp.lpSum(D[k, l] * w[k] for k in range(2 * num_uncertain))
+        rhs = -pulp.lpSum(P[(i, j)][l] * y[i, j] for i in nodes for j in nodes)
+        model += lhs == rhs
+
+    model.solve()
+
+    print("Status:", pulp.LpStatus[model.status])
+    print("Objective Value:", pulp.value(model.objective))
+    print("Open Facilities:", [j for j in nodes if pulp.value(x[j]) > 0.5])
+    print("Assignments:")
+    for i in nodes:
+        for j in nodes:
+            if pulp.value(y[i, j]) > 0.5:
+                print(f"  Demand at {i} assigned to facility at {j}")
+
+
+
+if __name__ == "__main__":
+    """Runs both deterministic and robust models."""
+    solve_deterministic_p_median(nodes, p, distance)
+    solve_robust_p_median(nodes, p, distance, uncertain_arcs)
+
