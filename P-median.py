@@ -1,6 +1,4 @@
 """
-p_median_facility_location.py
-
 This script solves the classical p-median facility location problem using both
 a deterministic formulation and a robust optimization formulation.
 
@@ -22,7 +20,6 @@ Key Features:
 - Ideal for teaching, research, and prototyping in facility location problems.
 
 Author: [Pranav Gairola]
-Date: [June 2025]
 """
 
 import pulp
