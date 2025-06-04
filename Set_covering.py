@@ -1,9 +1,42 @@
 """
-This script solves the Set Covering Problem (SCP) for a small network example
-with both deterministic and robust versions using PuLP.
+robust_set_covering.py
+
+This script solves the Set Covering Problem (SCP) for a small example network using both
+deterministic and robust optimization formulations with PuLP.
+
+Problem Description:
+--------------------
+You are given a set of candidate facility sites and their associated opening costs.
+Each demand node must be covered by at least one open facility. The coverage is based
+on a predefined coverage matrix (i.e., each demand node is covered by a subset of facilities).
+
+The goal is to minimize the total facility opening cost while ensuring every demand
+node is covered. A robust version of the model is also considered, where coverage
+availability is uncertain and modeled with box uncertainty.
+
+Coverage Network (Example):
+---------------------------
+The network includes both facilities and demand nodes, which in this simplified example
+are labeled with the same names ('A' to 'F'). Each demand node i is associated with a set N_i of
+facilities that can cover it:
+
+    Demand Node A ← {A, B, C}
+    Demand Node B ← {A, B, D}
+    Demand Node C ← {A, C, D}
+    Demand Node D ← {B, C, D, E}
+    Demand Node E ← {D, E}
+    Demand Node F ← {F}
+
+This structure defines a bipartite coverage graph between demand nodes and facility sites.
+
+Robust Formulation:
+-------------------
+Robust optimization is used to hedge against uncertainty in the coverage matrix (a_ij).
+A box uncertainty model assumes each entry in a_ij can be reduced by a δ factor (e.g., 0.5),
+leading to conservative constraints that ensure coverage even under worst-case deviations.
 
 Author: [Pranav Gairola]
-Date: [03-06-2025]
+Date: [June 2025]
 """
 
 import pulp
@@ -12,21 +45,12 @@ import pulp
 # Input Data
 # --------------------------
 
-# Candidate facility sites: A, B, C, D, E, F
 sites = ['A', 'B', 'C', 'D', 'E', 'F']
 
-# Cost of opening facility at each site
 costs = {
-    'A': 10,
-    'B': 10,
-    'C': 20,
-    'D': 20,
-    'E': 10,
-    'F': 10
+    'A': 10, 'B': 10, 'C': 20, 'D': 20, 'E': 10, 'F': 10
 }
 
-# Coverage matrix (a_ij): which sites can cover which demand nodes
-# Sets N_i for each demand node
 coverage = {
     'A': ['A', 'B', 'C'],
     'B': ['A', 'B', 'D'],
@@ -36,62 +60,72 @@ coverage = {
     'F': ['F']
 }
 
-# Uncertainty in a_ij: δ_ij, assumed only for robust model
-delta = 0.5  # box uncertainty with δ_ij = 1 for all i,j pairs
+delta = 0.5
+
 
 # --------------------------
-# Deterministic SCP Model
+# Function Definitions
 # --------------------------
 
-print("\n--- Solving Deterministic Set Covering Problem ---")
+def solve_deterministic_scp(sites, costs, coverage):
+    """
+    Solves the deterministic Set Covering Problem (SCP) using linear programming.
 
-# Create the problem
-det_model = pulp.LpProblem("Deterministic_Set_Covering", pulp.LpMinimize)
+    Args:
+        sites (list): List of candidate facility sites.
+        costs (dict): Dictionary of opening costs for each site.
+        coverage (dict): Dictionary mapping each demand node to its covering sites.
 
-# Decision variables: x_j ∈ {0,1}
-x = pulp.LpVariable.dicts("x", sites, cat='Binary')
+    Prints:
+        Optimal status, total cost, and selected facilities.
+    """
+    print("\n--- Solving Deterministic Set Covering Problem ---")
+    model = pulp.LpProblem("Deterministic_Set_Covering", pulp.LpMinimize)
+    x = pulp.LpVariable.dicts("x", sites, cat='Binary')
+    model += pulp.lpSum([costs[j] * x[j] for j in sites])
+    for i, Nj in coverage.items():
+        model += pulp.lpSum([x[j] for j in Nj]) >= 1, f"Cover_{i}"
+    model.solve()
+    print(f"Status: {pulp.LpStatus[model.status]}")
+    print(f"Minimum Cost: {pulp.value(model.objective)}")
+    print("Selected Facilities:")
+    for j in sites:
+        if x[j].value() == 1:
+            print(f" - Facility at site {j}")
 
-# Objective function: minimize total facility opening cost
-det_model += pulp.lpSum([costs[j] * x[j] for j in sites])
 
-# Constraints: for every demand node i, at least one facility covering i must be open
-for i, Nj in coverage.items():
-    det_model += pulp.lpSum([x[j] for j in Nj]) >= 1, f"Cover_{i}"
+def solve_robust_scp(sites, costs, coverage, delta):
+    """
+    Solves the robust Set Covering Problem under box uncertainty.
 
-# Solve the deterministic model
-det_model.solve()
-print(f"Status: {pulp.LpStatus[det_model.status]}")
-print(f"Minimum Cost: {pulp.value(det_model.objective)}")
-print("Selected Facilities:")
-for j in sites:
-    if x[j].value() == 1:
-        print(f" - Facility at site {j}")
+    Args:
+        sites (list): List of candidate facility sites.
+        costs (dict): Dictionary of opening costs for each site.
+        coverage (dict): Dictionary mapping each demand node to its covering sites.
+        delta (float): Box uncertainty parameter (e.g., 0.5).
+
+    Prints:
+        Robust optimal status, total cost, and selected facilities.
+    """
+    print("\n--- Solving Robust Set Covering Problem (Box Uncertainty) ---")
+    model = pulp.LpProblem("Robust_Set_Covering", pulp.LpMinimize)
+    x = pulp.LpVariable.dicts("x", sites, cat='Binary')
+    model += pulp.lpSum([costs[j] * x[j] for j in sites])
+    for i, Nj in coverage.items():
+        model += pulp.lpSum([(1 - delta) * x[j] for j in Nj]) >= 1, f"Robust_Cover_{i}"
+    model.solve()
+    print(f"Status: {pulp.LpStatus[model.status]}")
+    print(f"Robust Minimum Cost: {pulp.value(model.objective)}")
+    print("Selected Facilities (Robust):")
+    for j in sites:
+        if x[j].value() == 1:
+            print(f" - Facility at site {j}")
+
 
 # --------------------------
-# Robust SCP Model (Box Uncertainty in a_ij)
+# Main Execution
 # --------------------------
 
-print("\n--- Solving Robust Set Covering Problem (Box Uncertainty) ---")
-
-# Create a new problem
-rob_model = pulp.LpProblem("Robust_Set_Covering", pulp.LpMinimize)
-
-# New decision variables: x_j ∈ {0,1}
-xr = pulp.LpVariable.dicts("x", sites, cat='Binary')
-
-# Objective function remains the same
-rob_model += pulp.lpSum([costs[j] * xr[j] for j in sites])
-
-# Robust constraints: ∑_j ((ā_ij - δ_ij) * x_j) ≥ 1
-# Since nominal ā_ij = 1 → (1 - δ) = 0 when δ = 1 → only exact cover ensures robustness
-for i, Nj in coverage.items():
-    rob_model += pulp.lpSum([(1 - delta) * xr[j] for j in Nj]) >= 1, f"Robust_Cover_{i}"
-
-# Solve the robust model
-rob_model.solve()
-print(f"Status: {pulp.LpStatus[rob_model.status]}")
-print(f"Robust Minimum Cost: {pulp.value(rob_model.objective)}")
-print("Selected Facilities (Robust):")
-for j in sites:
-    if xr[j].value() == 1:
-        print(f" - Facility at site {j}")
+if __name__ == "__main__":
+    solve_deterministic_scp(sites, costs, coverage)
+    solve_robust_scp(sites, costs, coverage, delta)
