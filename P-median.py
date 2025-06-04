@@ -1,3 +1,48 @@
+"""
+Title: Deterministic and Robust p-Median Problem Solver using PuLP
+
+Author: Pranav Gairola
+Date: June 2025
+
+Description:
+This script implements a deterministic and robust formulation of the p-median facility location problem using the PuLP optimization library in Python.
+
+Problem:
+Given a set of demand nodes and pairwise distances, the goal is to locate exactly 'p' facilities such that the total assignment distance is minimized. Each demand node must be assigned to one of the open facilities.
+
+Structure:
+- Part 1: Solves the deterministic p-median problem.
+- Part 2: Solves the robust p-median version using affine dual constraints.
+
+Dependencies:
+- PuLP
+- NumPy
+
+How to Use:
+- Modify the 'nodes', 'distance' matrix, or number of facilities `p` as needed.
+- Run the script to view open facilities, assignments, and objective values.
+
+Illustration:
+Example network used in this code:
+    
+        A ——4—— B ——5—— C
+        |     /       | \ 
+        6   7        3  11
+        | /          |   \
+        E ——5—— D ——7—— F
+         \             /
+          ————4——————
+
+    Distances between nodes are symmetric and taken as per the matrix.
+    Robust Extension:
+    A robust version considers uncertainty in selected arc distances:
+    - Uncertain arcs: ('A', 'F'), ('B', 'F'), and ('C', 'E') with deviation ±2 units.
+    - A polyhedral uncertainty set is modeled via dualization for worst-case deviation handling.
+
+    Uncertainty applies on arcs: ('A','F'), ('B','F'), and ('C','E') (highlighted with ±2 in the robust version).
+
+"""
+
 import pulp
 
 # Data
