@@ -40,6 +40,7 @@ These scripts are designed for educational, research, and prototyping purposes.
 ---
 
 📌 Problem Descriptions
+
 1. 0-1 Knapsack Problem
 Goal: Select a subset of items to maximize total profit without exceeding a weight capacity.
 
@@ -97,8 +98,8 @@ python knapsack.py
 python set_covering.py
 python p_median.py
 
+## 📤 Sample Output
 
-📤 Sample Output
 1. Example output for the knapsack problem:
 
 === Deterministic Knapsack ===
@@ -267,13 +268,16 @@ Assignments:
 
 📚 References
 Bertsimas, D., & Sim, M. (2004). The Price of Robustness. Operations Research, 52(1), 35–53.
-
-
 Optimization examples inspired by classical combinatorial problems in OR literature.
 
-🙋‍♂️ Author
+## 🙋‍♂️ Author
 Pranav Gairola
 PhD, Transportation Engineering |
 Feel free to connect: https://www.linkedin.com/in/pranav-gairola-15a76ab3/
+
+## 🤝 Contributing
+
+Contributions are welcome! Feel free to fork the repo and submit a pull request. For major changes, please open an issue first to discuss what you would like to change.
+
 
 
