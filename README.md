@@ -55,3 +55,37 @@ Robust: Demand or cost matrix can vary within an uncertainty budget, using robus
 
 📍 Example: Solves a toy p-median instance with demand and cost matrix embedded.
 
+---
+
+## 🛠️ Requirements
+
+- Python 3.7+
+- PuLP
+
+Install dependencies:
+
+pip install pulp
+
+---
+
+🚀 Running the Scripts
+Each script contains a main() function for demonstration.
+
+Run them from the command line:
+
+python knapsack.py
+python set_covering.py
+python p_median.py
+
+
+📚 References
+Bertsimas, D., & Sim, M. (2004). The Price of Robustness. Operations Research, 52(1), 35–53.
+
+Optimization examples inspired by classical combinatorial problems in OR literature.
+
+🙋‍♂️ Author
+Pranav Gairola
+PhD, Transportation Engineering |
+Feel free to connect: https://www.linkedin.com/in/pranav-gairola-15a76ab3/
+
+
