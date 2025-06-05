@@ -24,7 +24,6 @@ These scripts are designed for educational, research, and prototyping purposes.
 - [📤 Sample Output](#-sample-output)
 - [📚 References](#-references)
 - [🙋‍♂️ Author](#-author)
-- [📄 License](#-license)
 - [🤝 Contributing](#-contributing)
 
 ---
