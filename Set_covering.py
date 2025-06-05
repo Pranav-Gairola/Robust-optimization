@@ -23,7 +23,7 @@ facilities that can cover it:
     Demand Node C ← {A, C, D}
     Demand Node D ← {B, C, D, E}
     Demand Node E ← {D, E}
-    Demand Node F ← {F}
+    Demand Node F ← {B, F}
 
 This structure defines a bipartite coverage graph between demand nodes and facility sites.
 
@@ -55,7 +55,7 @@ coverage = {
     'C': ['A', 'C', 'D'],
     'D': ['B', 'C', 'D', 'E'],
     'E': ['D', 'E'],
-    'F': ['F']
+    'F': ['B', 'F']
 }
 
 delta = 0.5
