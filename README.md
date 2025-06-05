@@ -39,7 +39,7 @@ These scripts are designed for educational, research, and prototyping purposes.
 
 ---
 
-📌 Problem Descriptions
+## 📌 Problem Descriptions
 
 1. 0-1 Knapsack Problem
 Goal: Select a subset of items to maximize total profit without exceeding a weight capacity.
@@ -89,7 +89,8 @@ pip install pulp
 
 ---
 
-🚀 Running the Scripts
+## 🚀 Running the Scripts
+
 Each script contains a main() function for demonstration.
 
 Run them from the command line:
@@ -266,8 +267,9 @@ Assignments:
   Demand at F assigned to facility at E
 
 
-📚 References
+## 📚 References
 Bertsimas, D., & Sim, M. (2004). The Price of Robustness. Operations Research, 52(1), 35–53.
+
 Optimization examples inspired by classical combinatorial problems in OR literature.
 
 ## 🙋‍♂️ Author
